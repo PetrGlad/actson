@@ -30,11 +30,8 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Demonstrates how you can use the {@link JsonParser} to pretty-print
- * a JSON object or array. Note: this is no perfect implementation of a
- * pretty-printer. The output could still be nicer. It's just a sample
- * application.
- * @author Michel Kraemer
+ * This example demonstrates how you can use the {@link JsonParser} to pretty-print
+ * a JSON data structure.
  */
 public class PrettyPrinter {
   /**
