@@ -19,8 +19,8 @@ repositories {
     jcenter()
 }
 
-tasks.withType(JavaCompile) { 
-    options.compilerArgs << "-Xlint" 
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint"
 }
 
 dependencies {
@@ -39,7 +39,7 @@ jar {
         instruction 'Import-Package', '*'
         instruction 'Export-Package', "de.undercouch.*;version=${version}"
     }
-    
+
     // include license into jar
     from 'LICENSE'
 }
@@ -92,7 +92,7 @@ uploadArchives {
         mavenDeployer {
             // sign artifacts before upload
             beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-            
+
             // upload to sonatype OSS
             repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
                 authentication(userName: this.hasProperty('sonatypeUsername') ? sonatypeUsername : '',
@@ -102,20 +102,20 @@ uploadArchives {
                 authentication(userName: this.hasProperty('sonatypeUsername') ? sonatypeUsername : '',
                     password: this.hasProperty('sonatypePassword') ? sonatypePassword : '')
             }
-            
+
             // pom file details
             pom.project {
                name 'actson'
                packaging 'jar'
                description 'A reactive (non-blocking, asynchronous) JSON parser.'
                url 'http://www.michel-kraemer.com'
- 
+
                scm {
                    url 'scm:git:git://github.com/michel-kraemer/actson.git'
                    connection 'scm:git:git://github.com/michel-kraemer/actson.git'
                    developerConnection 'scm:git:git://github.com/michel-kraemer/actson.git'
                }
- 
+
                licenses {
                    license {
                        name 'The Apache Software License, Version 2.0'
@@ -123,7 +123,7 @@ uploadArchives {
                        distribution 'repo'
                    }
                }
- 
+
                developers {
                    developer {
                        id 'michel-kraemer'
