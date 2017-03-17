@@ -24,10 +24,13 @@
 
 package de.undercouch.actson;
 
+import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * <p>A non-blocking, event-based JSON parser.</p>
@@ -357,6 +360,19 @@ public class JsonParser {
    */
   public JsonFeeder getFeeder() {
     return feeder;
+  }
+
+  public void nextInput(final byte nextByte, BiConsumer<JsonParser, Integer> eventConsumer) {
+    getFeeder().feed(nextByte);
+    final int event = nextEvent();
+    if (event != JsonEvent.NEED_MORE_INPUT) {
+      eventConsumer.accept(this, event);
+    }
+  }
+
+  public void endInput(BiConsumer<JsonParser, Integer> eventConsumer) {
+    getFeeder().done();
+    eventConsumer.accept(this, nextEvent());
   }
 
   /**

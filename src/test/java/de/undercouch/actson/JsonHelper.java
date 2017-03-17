@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.function.BiConsumer;
 
 public class JsonHelper {
   public static JsonGenerator defaultGenerator(Writer writer) {
@@ -24,19 +25,14 @@ public class JsonHelper {
    * Parse input JSON byte array with Actson and generate JSON text again with Jackson.
    * Is intended for demonstration and tests.
    */
-  public static void regenerateJson(final byte[] sourceJson, JsonParser parser, JsonGenerator generator) {
+  public static void regenerateJson(final byte[] sourceJson, final JsonParser parser, final JsonGenerator generator) {
+    final BiConsumer<JsonParser, Integer> eventConsumer =
+      (p, event) -> eventToGenerator(event, p, generator);
+    for (byte nextByte : sourceJson) {
+      parser.nextInput(nextByte, eventConsumer);
+    }
+    parser.endInput(eventConsumer);
     try {
-      int i = 0;
-      int event;
-      do {
-        while ((event = parser.nextEvent()) == JsonEvent.NEED_MORE_INPUT) {
-          i += parser.getFeeder().feed(sourceJson, i, sourceJson.length - i);
-          if (i == sourceJson.length) {
-            parser.getFeeder().done();
-          }
-        }
-        eventToGenerator(event, parser, generator);
-      } while (event != JsonEvent.EOF);
       generator.close();
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -50,47 +46,51 @@ public class JsonHelper {
    * @param parser    the JSON parser
    * @param generator send the event to this JSON text generator
    */
-  public static void eventToGenerator(int event, JsonParser parser, JsonGenerator generator) throws IOException {
-    switch (event) {
-      case JsonEvent.START_OBJECT:
-        generator.writeStartObject();
-        break;
-      case JsonEvent.END_OBJECT:
-        generator.writeEndObject();
-        break;
-      case JsonEvent.START_ARRAY:
-        generator.writeStartArray();
-        break;
-      case JsonEvent.END_ARRAY:
-        generator.writeEndArray();
-        break;
-      case JsonEvent.FIELD_NAME:
-        generator.writeFieldName(parser.getCurrentString());
-        break;
-      case JsonEvent.VALUE_STRING:
-        generator.writeString(parser.getCurrentString());
-        break;
-      case JsonEvent.VALUE_INT:
-        generator.writeNumber(parser.getCurrentInt());
-        break;
-      case JsonEvent.VALUE_DOUBLE:
-        generator.writeNumber(parser.getCurrentDouble());
-        break;
-      case JsonEvent.VALUE_TRUE:
-        generator.writeBoolean(true);
-        break;
-      case JsonEvent.VALUE_FALSE:
-        generator.writeBoolean(false);
-        break;
-      case JsonEvent.VALUE_NULL:
-        generator.writeNull();
-        break;
-      case JsonEvent.EOF:
-        break;
-      case JsonEvent.ERROR:
-        throw new IllegalArgumentException("JSON syntax error.");
-      default:
-        throw new IllegalArgumentException("Unknown event: " + event);
+  public static void eventToGenerator(int event, JsonParser parser, JsonGenerator generator) {
+    try {
+      switch (event) {
+        case JsonEvent.START_OBJECT:
+          generator.writeStartObject();
+          break;
+        case JsonEvent.END_OBJECT:
+          generator.writeEndObject();
+          break;
+        case JsonEvent.START_ARRAY:
+          generator.writeStartArray();
+          break;
+        case JsonEvent.END_ARRAY:
+          generator.writeEndArray();
+          break;
+        case JsonEvent.FIELD_NAME:
+          generator.writeFieldName(parser.getCurrentString());
+          break;
+        case JsonEvent.VALUE_STRING:
+          generator.writeString(parser.getCurrentString());
+          break;
+        case JsonEvent.VALUE_INT:
+          generator.writeNumber(parser.getCurrentInt());
+          break;
+        case JsonEvent.VALUE_DOUBLE:
+          generator.writeNumber(parser.getCurrentDouble());
+          break;
+        case JsonEvent.VALUE_TRUE:
+          generator.writeBoolean(true);
+          break;
+        case JsonEvent.VALUE_FALSE:
+          generator.writeBoolean(false);
+          break;
+        case JsonEvent.VALUE_NULL:
+          generator.writeNull();
+          break;
+        case JsonEvent.EOF:
+          break;
+        case JsonEvent.ERROR:
+          throw new IllegalArgumentException("JSON syntax error.");
+        default:
+          throw new IllegalArgumentException("Unknown event: " + event);
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 }
