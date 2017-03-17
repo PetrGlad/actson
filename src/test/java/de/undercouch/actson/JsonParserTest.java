@@ -55,8 +55,7 @@ public class JsonParserTest {
    * @return the new JSON string
    */
   private String parse(String json) {
-    JsonParser parser = new JsonParser();
-    return parse(json, parser);
+    return parse(json, new JsonParser());
   }
 
   /**
@@ -82,7 +81,6 @@ public class JsonParserTest {
    * @param parser the parser to use
    */
   private void parseFail(byte[] json, JsonParser parser) {
-    boolean ok = true;
     int j = 0;
     int event;
     do {
@@ -95,9 +93,8 @@ public class JsonParserTest {
           parser.getFeeder().done();
         }
       }
-      ok &= (event != JsonEvent.ERROR);
-    } while (ok && event != JsonEvent.EOF);
-    assertFalse(ok);
+    } while (event != JsonEvent.ERROR && event != JsonEvent.EOF);
+    assertEquals(event, JsonEvent.ERROR);
   }
 
   /**
@@ -343,8 +340,7 @@ public class JsonParserTest {
   @Test
   public void numberAndEndOfObject() {
     String json = "{\"n\":2}";
-    JsonParser parser = new JsonParser();
-    assertJsonObjectEquals(json, parse(json, parser));
+    assertJsonObjectEquals(json, parse(json));
   }
 
   /**
@@ -353,8 +349,7 @@ public class JsonParserTest {
   @Test
   public void fraction() {
     String json = "{\"n\":2.1}";
-    JsonParser parser = new JsonParser();
-    assertJsonObjectEquals(json, parse(json, parser));
+    assertJsonObjectEquals(json, parse(json));
   }
 
   /**
@@ -372,8 +367,7 @@ public class JsonParserTest {
   @Test
   public void zeroWithExp() {
     String json = "{\"n\":0e1}";
-    JsonParser parser = new JsonParser();
-    assertJsonObjectEquals(json, parse(json, parser));
+    assertJsonObjectEquals(json, parse(json));
   }
 
   /**
@@ -382,8 +376,7 @@ public class JsonParserTest {
   @Test
   public void topLevelEmptyString() {
     String json = "\"\"";
-    JsonParser parser = new JsonParser();
-    assertEquals("\"\"", parse(json, parser));
+    assertEquals(json, parse(json));
   }
 
   /**
@@ -392,8 +385,7 @@ public class JsonParserTest {
   @Test
   public void topLevelFalse() {
     String json = "false";
-    JsonParser parser = new JsonParser();
-    assertEquals("false", parse(json, parser));
+    assertEquals(json, parse(json));
   }
 
   /**
@@ -402,8 +394,7 @@ public class JsonParserTest {
   @Test
   public void topLevelInt() {
     String json = "42";
-    JsonParser parser = new JsonParser();
-    assertEquals("42", parse(json, parser));
+    assertEquals(json, parse(json));
   }
 
   /**
@@ -421,7 +412,6 @@ public class JsonParserTest {
   @Test
   public void topLevelZero() {
     String json = "0";
-    JsonParser parser = new JsonParser();
-    assertEquals("0", parse(json, parser));
+    assertEquals(json, parse(json));
   }
 }
