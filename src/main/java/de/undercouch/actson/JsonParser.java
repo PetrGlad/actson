@@ -24,13 +24,11 @@
 
 package de.undercouch.actson;
 
-import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 /**
  * <p>A non-blocking, event-based JSON parser.</p>
@@ -362,14 +360,33 @@ public class JsonParser {
     return feeder;
   }
 
-  public void nextInput(final byte nextByte, BiConsumer<JsonParser, Integer> eventConsumer) {
+  /**
+   * Feed next byte of source stream to parser. If this provides enough data to produce
+   * next JSON event then eventConsumer is called with that event.
+   *
+   * @see #endInput(BiConsumer)
+   *
+   * @param nextByte Next byte from input stream.
+   * @param eventConsumer Consumer that receives parsed JSON events.
+   * @return false value means that no more input will be accepted (because whole JSON document
+   * is parsed or JSON syntax error occurred).
+   */
+  public boolean nextInput(final byte nextByte, BiConsumer<JsonParser, Integer> eventConsumer) {
     getFeeder().feed(nextByte);
     final int event = nextEvent();
     if (event != JsonEvent.NEED_MORE_INPUT) {
       eventConsumer.accept(this, event);
     }
+    return event != JsonEvent.ERROR && event != JsonEvent.EOF;
   }
 
+  /**
+   * Call this to indicate that end of input stream is reached and there are no more input data.
+   * This would produce remaining JSON event if applicable.
+   *
+   * @see #nextInput(byte, BiConsumer)
+   * @param eventConsumer Consumer that receives parsed JSON events.
+   */
   public void endInput(BiConsumer<JsonParser, Integer> eventConsumer) {
     getFeeder().done();
     eventConsumer.accept(this, nextEvent());

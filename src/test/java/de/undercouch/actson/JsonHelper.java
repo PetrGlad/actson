@@ -29,7 +29,8 @@ public class JsonHelper {
     final BiConsumer<JsonParser, Integer> eventConsumer =
       (p, event) -> eventToGenerator(event, p, generator);
     for (byte nextByte : sourceJson) {
-      parser.nextInput(nextByte, eventConsumer);
+      if (!parser.nextInput(nextByte, eventConsumer))
+        break;
     }
     parser.endInput(eventConsumer);
     try {

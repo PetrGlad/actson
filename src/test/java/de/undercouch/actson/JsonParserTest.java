@@ -34,6 +34,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import org.apache.commons.io.IOUtils;
@@ -81,20 +83,13 @@ public class JsonParserTest {
    * @param parser the parser to use
    */
   private void parseFail(byte[] json, JsonParser parser) {
-    int j = 0;
-    int event;
-    do {
-      while ((event = parser.nextEvent()) == JsonEvent.NEED_MORE_INPUT) {
-        while (!parser.getFeeder().isFull() && j < json.length) {
-          parser.getFeeder().feed(json[j]);
-          ++j;
-        }
-        if (j == json.length) {
-          parser.getFeeder().done();
-        }
-      }
-    } while (event != JsonEvent.ERROR && event != JsonEvent.EOF);
-    assertEquals(event, JsonEvent.ERROR);
+    final BiConsumer<JsonParser, Integer> eventConsumer = (p, event) -> {};
+    for (byte nextByte : json) {
+      if (!parser.nextInput(nextByte, eventConsumer))
+        break;
+    }
+    parser.endInput(eventConsumer);
+    assertEquals(parser.nextEvent(), JsonEvent.ERROR);
   }
 
   /**
