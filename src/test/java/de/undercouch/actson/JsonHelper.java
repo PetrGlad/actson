@@ -27,7 +27,13 @@ public class JsonHelper {
    */
   public static void regenerateJson(final byte[] sourceJson, final JsonParser parser, final JsonGenerator generator) {
     final BiConsumer<JsonParser, Integer> eventConsumer =
-      (p, event) -> eventToGenerator(event, p, generator);
+      (p, event) -> {
+        try {
+          eventToGenerator(event, p, generator);
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      };
     for (byte nextByte : sourceJson) {
       if (!parser.nextInput(nextByte, eventConsumer))
         break;
@@ -47,8 +53,7 @@ public class JsonHelper {
    * @param parser    the JSON parser
    * @param generator send the event to this JSON text generator
    */
-  public static void eventToGenerator(int event, JsonParser parser, JsonGenerator generator) {
-    try {
+  public static void eventToGenerator(int event, JsonParser parser, JsonGenerator generator) throws IOException {
       switch (event) {
         case JsonEvent.START_OBJECT:
           generator.writeStartObject();
@@ -90,8 +95,5 @@ public class JsonHelper {
         default:
           throw new IllegalArgumentException("Unknown event: " + event);
       }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
   }
 }
